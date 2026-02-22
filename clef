@@ -59,7 +59,7 @@ SERVICES_TO_DISABLE=(
 )
 
 for svc in "${SERVICES_TO_DISABLE[@]}"; do
-    run_cmd "Mask ${svc}" systemctl mask --now "$svc"
+systemctl mask --now "$svc"
 done
 
 # APT HARDENING
