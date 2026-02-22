@@ -349,8 +349,7 @@ log_info "Firewall configured and saved"
 # -- Services ------------------------------------------
 log_step "SYSTEMD HARDENING"
 log_info "Masking unnecessary systemd services..."
-for svc in "${SERVICES_TO_DISABLE[@]}"; do
-    run_cmd "Mask ${svc}" systemctl mask --now "$svc"
+for svc in "${SERVICES_TO_DISABLE[@]}"; do systemctl mask --now "$svc"
 done
 
 # -- APT Hardening ---------------------------------------------
@@ -420,19 +419,18 @@ apt install -y "${INSTALL_PKGS[@]}" --no-install-recommends
 # -- Accounts/Groups -----------------------------------------
 log_step "ACCOUNTS & GROUPS"
 for grp in _ssh bluetooth nogroup fax floppy irc kvm voice games; do
-    run_cmd "Delete group ${grp}" groupdel "$grp" --force
+groupdel "$grp" --force
 done
 
 for usr in nobody games irc uucp proxy backup dhcpcd list news sync man mail lp www-data; do
-    run_cmd "Delete user ${usr}" userdel "$usr"
+userdel "$usr"
 done
 
 for grp in render input video audio tty; do
-    run_cmd "Add ${HARDEN_USER} to ${grp}" usermod -aG "$grp" "$HARDEN_USER"
+usermod -aG "$grp" "$HARDEN_USER"
 done
 
 # -- PAM -------------------------------------
-------------------
 if ! pamu2fcfg -u "$HARDEN_USER" -o "$PAM_ORIGIN" -i "$PAM_APPID" > "$U2F_AUTHFILE"; then
     log_error "U2F enrollment failed - key not detected or touch timed out"
     log_error "Cannot continue without a valid U2F mapping - exiting"
@@ -1183,7 +1181,7 @@ chmod -R 0440 /etc/sudoers.d
 # -- GTFOBins / Capabilities -----------------------------------
 log_step "CAPABILITY & BINARY STRIPPING"
 for interp in "${STRIP_CAPS[@]}"; do
-    [[ -f "$interp" ]] && run_cmd "Strip caps from ${interp}" setcap -r "$interp"
+    [[ -f "$interp" ]] && setcap -r "$interp"
 done
 
 cap_output=$(getcap -r /usr 2>/dev/null | awk '{print $1}' || true)
@@ -1191,7 +1189,7 @@ for binary in $cap_output; do
     cap_basename=$(basename "$binary")
     for gtfo in "${ALL_GTFOBINS[@]}"; do
         if [[ "$cap_basename" == "$gtfo" ]] || [[ "$cap_basename" == "${gtfo}."* ]]; then
-            run_cmd "Strip GTFOBin caps from ${binary}" setcap -r "$binary"
+            setcap -r "$binary"
             break
         fi
     done
