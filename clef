@@ -83,13 +83,11 @@ REMOVE_PKGS=(
 )
 
 INSTALL_PKGS=(
-    "extrepo" "iptables" "iptables-persistent" "netfilter-persistent"
-    "rsyslog" "libpam-tmpdir" "libpam-u2f" "lynis" "unhide"
+    "rsyslog" "libpam-tmpdir" "libpam-u2f" "lynis" "firefox-esr"
     "libxfce4ui-utils" "xfce4-panel" "xfce4-session" "xfce4-settings"
     "xfconf" "xfdesktop4" "xfwm4" "xserver-xorg" "xinit"
     "xserver-xorg-legacy" "xfce4-pulseaudio-plugin"
-    "xfce4-whiskermenu-plugin" "qterminal" "breeze-gtk-theme"
-    "bibata-cursor-theme" "dbus-user-session" "featherpad"
+    "xfce4-whiskermenu-plugin" "qterminal" "breeze-gtk-theme" "dbus-user-session" "featherpad"
     "pipewire" "pipewire-pulse" "wireplumber"
     "gstreamer1.0-libav" "gstreamer1.0-plugins-bad"
     "qt5ct" "opensnitch" "opensnitch-ebpf-modules"
@@ -348,15 +346,12 @@ ip6tables-save > /etc/iptables/rules.v6
 netfilter-persistent save
 log_info "Firewall configured and saved"
 
-# -- APT: Single purge pass ------------------------------------
-log_step "PACKAGE REMOVAL"
-log_info "Removing unnecessary packages..."
-apt purge -y "${REMOVE_PKGS[@]}" 2>/dev/null || true
-
-# -- APT: Single install pass ----------------------------------
-log_step "PACKAGE INSTALLATION"
-log_info "Installing required packages..."
-apt install -y "${INSTALL_PKGS[@]}" --no-install-recommends
+# -- Services ------------------------------------------
+log_step "SYSTEMD HARDENING"
+log_info "Masking unnecessary systemd services..."
+for svc in "${SERVICES_TO_DISABLE[@]}"; do
+    run_cmd "Mask ${svc}" systemctl mask --now "$svc"
+done
 
 # -- APT Hardening ---------------------------------------------
 log_step "APT HARDENING"
@@ -375,6 +370,11 @@ APT::Periodic::AutocleanInterval "7";
 APT::Periodic::Unattended-Upgrade "0";
 APT::Sandbox::Seccomp "true";
 EOF
+
+# -- Package Removal ------------------------------------
+log_step "PACKAGE REMOVAL"
+log_info "Removing unnecessary packages..."
+apt purge -y "${REMOVE_PKGS[@]}" 2>/dev/null || true
 
 # -- Package Deny Lists ----------------------------------------
 log_info "Creating package deny lists..."
@@ -412,14 +412,12 @@ EOF
 
 chmod 644 /etc/apt/preferences.d/*.pref
 
-# -- Systemd Services ------------------------------------------
-log_step "SYSTEMD HARDENING"
-log_info "Masking unnecessary systemd services..."
-for svc in "${SERVICES_TO_DISABLE[@]}"; do
-    run_cmd "Mask ${svc}" systemctl mask --now "$svc"
-done
+# -- Package Installation ----------------------------------
+log_step "PACKAGE INSTALLATION"
+log_info "Installing required packages..."
+apt install -y "${INSTALL_PKGS[@]}" --no-install-recommends
 
-# -- Accounts & Groups -----------------------------------------
+# -- Accounts/Groups -----------------------------------------
 log_step "ACCOUNTS & GROUPS"
 for grp in _ssh bluetooth nogroup fax floppy irc kvm voice games; do
     run_cmd "Delete group ${grp}" groupdel "$grp" --force
@@ -647,9 +645,9 @@ cat > /etc/security/limits.d/limits.conf << EOF
 *            -      nproc         512
 *            -      maxlogins     1
 *            -      maxsyslogins  1
-${HARDEN_USER}    -      nproc         2048
-${HARDEN_USER}    -      maxlogins     1
-${HARDEN_USER}    -      maxsyslogins  1
+dev          -      nproc         2048
+dev          -      maxlogins     1
+dev          -      maxsyslogins  1
 root         -      nproc         65536
 root         -      maxlogins     1
 root         -      maxsyslogin   1
@@ -1026,7 +1024,6 @@ EOF
 fi
 
 groupadd -f proc
-# usermod -aG used to avoid gpasswd/PAM interaction
 usermod -aG proc root
 usermod -aG proc "$HARDEN_USER"
 
@@ -1095,65 +1092,18 @@ find / -xdev \
         \( -nouser -o -nogroup \) -printf "Orphan: %p (UID: %U GID: %G)\n" \
     \) 2>/dev/null || true
 
-# -- OpenSnitch ------------------------------------------------
-log_step "OPENSNITCH"
-cat > /etc/systemd/system/opensnitchd.service << 'EOF'
-[Unit]
-Description=OpenSnitch Firewall Daemon
-After=network.target
-After=netfilter-persistent.service
-Wants=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/bin/opensnitchd -rules-path /etc/opensnitchd/rules -log-file /var/log/opensnitchd.log
-Restart=on-failure
-RestartSec=5
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-mkdir -p /etc/opensnitchd/rules
-chmod 750 /etc/opensnitchd /etc/opensnitchd/rules
-touch /var/log/opensnitchd.log
-chmod 640 /var/log/opensnitchd.log
-systemctl daemon-reload
-run_cmd "Enable opensnitchd" systemctl enable opensnitchd.service
-run_cmd "Start opensnitchd" systemctl start opensnitchd.service
-
-log_info "Installing OpenSnitch blocklists..."
-if git clone --depth 1 https://github.com/DXC-0/Respect-My-Internet.git; then
-    cd Respect-My-Internet
-    chmod +x install.sh
-    ./install.sh
-    cd ~
-    rm -rf ~/Respect-My-Internet
-else
-    log_warn "OpenSnitch blocklist clone failed - install manually post-boot"
-    (( WARN_COUNT++ )) || true
-fi
-
 # -- Privilege Escalation Hardening ----------------------------
 log_step "PRIVILEGE HARDENING"
 echo "" > /etc/securetty
 chmod 0400 /etc/securetty
-
-# Explicitly strip unix_chkpwd SUID - pam_unix not used in auth stack,
-# this helper is unnecessary attack surface
 chmod a-s /sbin/unix_chkpwd 2>/dev/null || true
 chmod a-s /usr/sbin/unix_chkpwd 2>/dev/null || true
-
 rm -rf /etc/skel* /etc/dhcp* /etc/ssh* /etc/ppp* /etc/apparmor* \
        /etc/cron* /etc/emacs* /etc/xemacs* /etc/gai* /etc/vim* \
        /etc/wpa* /etc/manpath* /etc/libnl* 2>/dev/null || true
-
 rm -f /usr/bin/run0 /usr/sbin/arp* /usr/bin/passwd* \
       /usr/bin/gpasswd* /usr/sbin/ebtables* /usr/sbin/xtables* \
       /usr/bin/sudoreplay /usr/bin/sudoedit 2>/dev/null || true
-
 rm -rf /usr/lib/emacs* /usr/lib/gpg* /usr/lib/gvfs* \
        /usr/lib/os-probe* /usr/lib/man-db* /usr/lib/ppp* \
        /usr/lib/gnupg* /usr/lib/systemd/ssh* \
@@ -1254,13 +1204,11 @@ done
 # -- SUID/SGID Strip -------------------------------------------
 log_step "SUID/SGID STRIPPING"
 find / -xdev \( -perm -4000 -o -perm -2000 \) -exec chmod a-s {} \;
-# Restore only what is explicitly required
 chmod u+s /usr/bin/sudo
-# unix_chkpwd left stripped - pam_unix not in auth stack, SUID unnecessary
-log_info "unix_chkpwd SUID intentionally left stripped (pam_unix not used in auth)"
 
 # -- Final Cleanup ---------------------------------------------
 log_step "FINAL CLEANUP"
+apt purge -y ssh* openssh* acpi* anacron* avahi* cups* print* modem* wpa* netcat* os-prober* zram* pci* pmount* acpi* anacron* avahi* bc bind9* dns* fastfetch fonts-noto* fprint* dhcp* lxc* docker* podman* xen* bochs* uml* vagrant* libssh* ssh* openssh* acpi* samba* winbind* qemu* libvirt* virt* cron* avahi* cup* print* rsync* virtual* sane* rpc* nfs* blue* pp* spee* espeak* mobile* wireless* perl git* curl wget traceroute os-prober* dictionaries-common doc-debian iamerican ibritish ienglish-common inet* ispell task-english util-linux-locales wamerican vim* os-prober* netcat*
 RC_PKGS=$(dpkg -l | grep '^rc' | awk '{print $2}' || true)
 if [[ -n "$RC_PKGS" ]]; then
     echo "$RC_PKGS" | xargs apt purge -y 2>/dev/null || true
