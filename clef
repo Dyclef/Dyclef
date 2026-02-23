@@ -100,7 +100,7 @@ EOF
 
 # PACKAGE INSTALLATION
 log_info "Installing required packages..."
-apt install -y rsyslog libpam-tmpdir libxfce4ui-utils xfce4-panel xfce4-session xfce4-settings xfconf xfdesktop4 xfwm4 xserver-xorg xinit xserver-xorg-legacy xfce4-pulseaudio-plugin xfce4-whiskermenu-plugin gnome-terminal gnome-brave-icon-theme breeze-gtk-theme dbus-user-session featherpad pipewire pipewire-pulse wireplumber gstreamer1.0-libav gstreamer1.0-plugins-bad opensnitch opensnitch-ebpf-modules python3-opensnitch-ui rsyslog labwc swaybg lxqt-core lxqt-wayland-session pcmanfm-qt xdg-desktop-portal xdg-desktop-portal-wlr xdg-utils layer-shell-qt wayland-protocols xwayland qt6-wayland qtwayland5 mesa-vulkan-drivers mesa-va-drivers firmware-amd-graphics qt6ct sddm --no-install-recommends
+apt install -y rsyslog libpam-tmpdir gnome-brave-icon-theme dbus-user-session featherpad pipewire pipewire-pulse wireplumber gstreamer1.0-libav gstreamer1.0-plugins-bad opensnitch opensnitch-ebpf-modules python3-opensnitch-ui labwc swaybg lxqt-core lxqt-wayland-session xdg-desktop-portal xdg-desktop-portal-wlr xdg-utils layer-shell-qt wayland-protocols xwayland qt6-wayland qtwayland5 qt5ct qt6ct --no-install-recommends
 
 # ACCOUNTS/GROUPS
 log_info "Purging and setting up accounts/groups..."
@@ -637,8 +637,6 @@ blacklist udf
 install udf /bin/false
 blacklist usb_storage
 install usb_storage /bin/false
-blacklist uvcvideo
-install uvcvideo /bin/false
 blacklist vboxdrv
 install vboxdrv /bin/false
 blacklist vboxnetadp
@@ -651,8 +649,6 @@ blacklist vhost_net
 install vhost_net /bin/false
 blacklist vhost_vsock
 install vhost_vsock /bin/false
-blacklist video1394
-install video1394 /bin/false
 blacklist vmmon
 install vmmon /bin/false
 blacklist vmw_vmci
@@ -686,11 +682,11 @@ cp /etc/fstab /etc/fstab.bak
 if ! grep -q "proc.*hidepid=2" /etc/fstab; then
     cat >> /etc/fstab << 'EOF'
 proc     /proc      proc      noatime,nodev,nosuid,noexec,hidepid=2,gid=proc    0 0
-tmpfs    /tmp       tmpfs     size=2G,noatime,nodev,nosuid,noexec,mode=1777     0 0
-tmpfs    /var/tmp   tmpfs     size=1G,noatime,nodev,nosuid,noexec,mode=1777     0 0
-tmpfs    /dev/shm   tmpfs     size=512M,noatime,nodev,nosuid,noexec,mode=1777   0 0
-tmpfs    /run       tmpfs     size=512M,noatime,nodev,nosuid,mode=0755          0 0
-tmpfs    /home/dev/.cache    tmpfs    size=2G,noatime,nodev,nosuid,noexec,mode=700,uid=1000,gid=1000    0 0
+tmpfs    /tmp       tmpfs     size=2G,noatime,nodev,nosuid,noexec 0 0
+tmpfs    /var/tmp   tmpfs     size=1G,noatime,nodev,nosuid,noexec 0 0
+tmpfs    /dev/shm   tmpfs     size=512M,noatime,nodev,nosuid,noexec 0 0
+tmpfs    /run       tmpfs     size=512M,noatime,nodev,nosuid 0 0
+tmpfs    /home/dev/.cache    tmpfs    size=2G,noatime,nodev,nosuid,noexec,mode=0700,uid=1000,gid=1000 0 0
 EOF
 fi
 
@@ -782,44 +778,6 @@ fi
 chown root:adm -R /var/log 2>/dev/null || true
 chmod -R 0640 /var/log 2>/dev/null || true
 chmod 0640 /var/log 2>/dev/null || true
-
-# OPENSNITCH 
-log_info "Configuring OpenSnitch application firewall..."
-cat > /etc/systemd/system/opensnitchd.service << 'EOF'
-[Unit]
-Description=OpenSnitch Firewall Daemon
-After=network.target
-After=netfilter-persistent.service
-Wants=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/bin/opensnitchd -rules-path /etc/opensnitchd/rules -log-file /var/log/opensnitchd.log
-Restart=on-failure
-RestartSec=5
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-mkdir -p /etc/opensnitchd/rules
-chmod 750 /etc/opensnitchd
-chmod 750 /etc/opensnitchd/rules
-touch /var/log/opensnitchd.log
-chmod 640 /var/log/opensnitchd.log
-systemctl daemon-reload
-systemctl enable opensnitchd.service
-systemctl start opensnitchd.service
-
-log_info "Installing OpenSnitch blocklists..."
-apt install -y git --no-install-recommends
-git clone --depth 1 https://github.com/DXC-0/Respect-My-Internet.git
-cd Respect-My-Internet
-chmod +x install.sh
-./install.sh
-cd
 
 # PRIVILEGE ESCALATION HARDENING
 echo "" > /etc/securetty
@@ -971,6 +929,7 @@ if [[ -n "$RC_PKGS" ]]; then
 fi
 apt autopurge -y 2>/dev/null || true
 apt clean
+apt install gstreamer1.0-libav gstreamer1.0-plugins-bad ffmpeg
 
 chattr +i /etc/passwd 2>/dev/null || true
 chattr +i /etc/passwd- 2>/dev/null || true
