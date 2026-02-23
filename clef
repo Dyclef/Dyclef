@@ -100,19 +100,19 @@ EOF
 
 # PACKAGE INSTALLATION
 log_info "Installing required packages..."
-apt install -y rsyslog libpam-tmpdir gnome-brave-icon-theme dbus-user-session featherpad pipewire pipewire-pulse wireplumber gstreamer1.0-libav gstreamer1.0-plugins-bad opensnitch opensnitch-ebpf-modules python3-opensnitch-ui labwc swaybg lxqt-core lxqt-wayland-session xdg-desktop-portal xdg-desktop-portal-wlr xdg-utils layer-shell-qt wayland-protocols xwayland qt6-wayland qtwayland5 qt5ct qt6ct --no-install-recommends
+apt install -y rsyslog libpam-tmpdir gnome-brave-icon-theme breeze-gtk-theme featherpad xfce4 xinit xserver-xorg xserver-xorg-legacy dbus-user-session featherpad pipewire pipewire-pulse wireplumber gstreamer1.0-libav gstreamer1.0-plugins-bad opensnitch opensnitch-ebpf-modules python3-opensnitch-ui qt5ct --no-install-recommends
 
 # ACCOUNTS/GROUPS
 log_info "Purging and setting up accounts/groups..."
 for grp in _ssh bluetooth nogroup fax floppy irc kvm voice games; do
-groupdel "$grp" --force
+groupdel "$grp" --force 2>/dev/null || true
 done
 
 for usr in nobody games irc uucp proxy backup dhcpcd list news sync man mail lp www-data; do
-userdel "$usr"
+userdel "$usr" 2>/dev/null || true
 done
 
-for grp in render input video audio tty; do adduser dev "$grp"
+for grp in render input video audio tty; do adduser dev "$grp" 2>/dev/null || true
 done
 
 # PAM
@@ -842,8 +842,8 @@ SECURE_SUPATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
 SECURE_PATH="/usr/local/bin:/usr/bin"
 sed -i "s|^ENV_SUPATH.*|ENV_SUPATH      PATH=$SECURE_SUPATH|" /etc/login.defs
 sed -i "s|^ENV_PATH.*|ENV_PATH        PATH=$SECURE_PATH|" /etc/login.defs
-sed -i "s|PATH=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"|PATH=\"$SECURE_SUPATH\"|g" /etc/profile
-sed -i "s|PATH=\"/usr/local/bin:/usr/bin:/bin"|PATH=\"$SECURE_PATH\"|g" /etc/profile
+sed -i "s|PATH=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\"|PATH=\"$SECURE_SUPATH\"|g" /etc/profile
+sed -i "s|PATH=\"/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games\"|PATH=\"$SECURE_PATH\"|g" /etc/profile
 sed -i "s|^PATH=.*|PATH=\"$SECURE_SUPATH\"|" /etc/environment
 
 # BLOCK POLKIT
