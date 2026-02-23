@@ -929,7 +929,7 @@ if [[ -n "$RC_PKGS" ]]; then
 fi
 apt autopurge -y 2>/dev/null || true
 apt clean
-apt install gstreamer1.0-libav gstreamer1.0-plugins-bad ffmpeg
+apt install -y gstreamer1.0-libav gstreamer1.0-plugins-bad ffmpeg
 
 chattr +i /etc/passwd 2>/dev/null || true
 chattr +i /etc/passwd- 2>/dev/null || true
