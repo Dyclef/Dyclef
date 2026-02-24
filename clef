@@ -23,7 +23,7 @@ log_error() {
 # FIREWALL
 log_info "Configuring iptables firewall..."
 apt purge -y nftables 2>/dev/null || true
-apt install -y iptables iptables-persistent netfilter-persistent git --no-install-recommends
+apt install -y iptables iptables-persistent netfilter-persistent --no-install-recommends
 systemctl enable netfilter-persistent
 service netfilter-persistent start
 iptables -F
