@@ -129,6 +129,66 @@ netfilter-persistent save
 
 # SYSTEMD HARDENING
 log_info "Disabling unnecessary systemd services..."
+cd /usr/bin/
+sudo rm -r  z* xz* screendump  slabtop mapscrn ischroot script* sensible-* sudoedit sudoreplay su bashbug bzip2* select-editor pipesz pinky stty grotty 
+cd /usr/sbin
+sudo rm -r chroot debugfs e2* iw visudo
+sudo rm -r sulogin swap*
+cd ~
+sudo rm -r /usr/lib/systemd/systemd-ssh*
+sudo rm -r /usr/lib/systemd/ssh_config.d/
+sudo rm -r /usr/lib/systemd/systemd-makefs 
+sudo rm -r /usr/lib/systemd/systemd-sulogin-shell 
+sudo rm -r /usr/lib/systemd/system/bluetooth.target 
+sudo rm -r /usr/lib/systemd/system/debug-shell.service 
+sudo rm -r /usr/lib/systemd/system/e2scrub*
+sudo rm -r /usr/lib/systemd/system/factory-reset*
+sudo rm -r /usr/lib/systemd/system/kexec.target 
+sudo rm -r /usr/lib/systemd/system/nss-*
+sudo rm -r /usr/lib/systemd/system/printer.target 
+sudo rm -r /usr/lib/systemd/system/proc-sys-fs-binfmt_misc.*
+sudo rm -r /usr/lib/systemd/system/rc-local.service
+sudo rm -r /usr/lib/systemd/system/rc-local.service.d
+sudo rm -r /usr/lib/systemd/system/remote-*
+sudo rm -r /usr/lib/systemd/system/rpcbind.target 
+sudo rm -r /usr/lib/systemd/system/serial-getty@.service 
+sudo rm -r /usr/lib/systemd/system/smartcard.target 
+sudo rm -r /usr/lib/systemd/system/ssh-access.target 
+sudo rm -r /usr/lib/systemd/system/swap.target 
+sudo rm -r /usr/lib/systemd/system/systemd-hibernate*
+sudo rm -r /usr/lib/systemd/system/systemd-backlight@.service 
+sudo rm -r /usr/lib/systemd/system/systemd-factory-reset*
+sudo rm -r /usr/lib/systemd/system/systemd-kexec.service 
+sudo rm -r /usr/lib/systemd/system/systemd-pstore.service 
+sudo rm -r /usr/lib/systemd/system/systemd-binfmt.service 
+sudo rm -r /usr/lib/systemd/system/systemd-hostnamed.s*
+sudo rm -r /usr/lib/systemd/system/usb-gadget.target 
+sudo rm -r /usr/lib/systemd/system/veritysetup*
+sudo rm -r /usr/lib/systemd/system/quotaon*
+sudo rm -r /usr/lib/systemd/user/bluetooth.target 
+sudo rm -r /usr/lib/systemd/user/capsule@.target 
+sudo rm -r /usr/lib/systemd/user/printer.target 
+sudo rm -r /usr/lib/systemd/user/smartcard.target 
+sudo rm -r /usr/lib/systemd/system-generators/systemd-ssh-generator 
+sudo rm -r /usr/lib/systemd/system-generators/systemd-factory-reset-generator 
+sudo rm -r /usr/lib/systemd/system-generators/systemd-rc-local-generator 
+sudo rm -r /usr/lib/systemd/system-generators/systemd-debug-generator 
+sudo rm -r /usr/lib/systemd/system-generators/systemd-veritysetup-generator 
+sudo rm -r /usr/libexec/e2fsprogs/
+sudo rm -r /usr/libexec/sudo/sudo_intercept.so 
+sudo rm -r /etc/alternatives/
+sudo rm -r /etc/binfmt.d/
+sudo rm -r /etc/cron.d*
+sudo rm -r /etc/dhcp/
+sudo rm -r /etc/e2scrub.conf 
+sudo rm -r /etc/gai.conf 
+sudo rm -r /etc/gss
+sudo rm -r /etc/libnl-3/
+sudo rm -r /etc/nsswitch.conf 
+sudo rm -r /etc/default/nss
+sudo rm -r /etc/skel/
+sudo rm -r /etc/ssh/
+
 SERVICES_TO_DISABLE=(
 "accounts-daemon.service" "anacron.service" "anacron.timer" "apport.service" "apt-daily-upgrade.timer" "apt-daily.timer" "avahi-daemon.service" "avahi-daemon.socket" "bluetooth.service" "bluetooth.target" "bolt.service" "brltty.service" "chef-client.service" "cloud-config.service" "cloud-final.service" "cloud-init-local.service" "cloud-init.service" "cloud-init.target" "cockpit.service" "cockpit.socket" "colord.service" "console-getty.service" "containerd.service" "cron.service" "ctrl-alt-del.target" "cups-browsed.service" "cups.path" "cups.service" "cups.socket" "debug-shell.service" "docker.service" "docker.socket" "e2scrub_all.service" "e2scrub_all.timer" "e2scrub_reap.service" "e2scrub@.service" "exim4.service" "factory-reset.target" "fprintd.service" "fwupd-refresh.timer" "fwupd.service" "gdm3.service" "geoclue.service" "getty@ttyS0.service" "gnome-remote-desktop.service" "gnome-software-service.service" "hibernate.target" "hv-fcopy-daemon.service" "hv-kvp-daemon.service" "hv-vss-daemon.service" "hybrid-sleep.target" "hyperv-daemons.service" "iio-sensor-proxy.service" "inetd.service" "iscsi.service" "iscsid.service" "iscsid.socket" "kerneloops.service" "kexec.target" "krb5-admin-server.service" "krb5-kdc.service" "libvirt-guests.service" "libvirtd-admin.socket" "libvirtd-ro.socket" "libvirtd.service" "libvirtd.socket" "lvm2-lvmpolld.service" "lvm2-lvmpolld.socket" "lxc-net.service" "lxc.service" "lxd.service" "lxd.socket" "machines.target" "man-db.timer" "ModemManager.service" "motd-news.timer" "multipassd.service" "multipathd.service" "nfs-blkmap.service" "nfs-client.target" "nfs-common.service" "nfs-idmapd.service" "nfs-mountd.service" "nfs-server.service" "nmbd.service" "nscd.service" "nslcd.service" "nvmefc-boot-connections.service" "nvmf-autoconnect.service" "open-iscsi.service" "open-vm-tools.service" "packagekit.service" "pcscd.socket" "podman.service" "podman.socket" "postfix.service" "power-profiles-daemon.service" "powertop.service" "printer.target" "proc-sys-fs-binfmt_misc.automount" "proc-sys-fs-binfmt_misc.mount" "proftpd.service" "puppet.service" "pure-ftpd.service" "qemu-guest-agent.service" "quotaon-root.service" "quotaon.service" "rbdmap.service" "rc-local.service" "remote-cryptsetup.target" "remote-fs-pre.target" "remote-fs.target" "remote-integritysetup.target" "remote-veritysetup.target" "rpcbind.service" "rpcbind.socket" "rpcbind.target" "rsync.service" "rtkit-daemon.service" "salt-minion.service" "samba-ad-dc.service" "samba.service" "sendmail.service" "serial-getty@.service" "smbd.service" "snapd.seeded.service" "snapd.service" "snapd.socket" "snmpd.service" "snmptrapd.service" "speech-dispatcher.service" "spice-vdagentd.service" "spice-vdagentd.socket" "ssh.service" "ssh.socket" "sshd.service" "sssd-autofs.socket" "sssd-kcm.socket" "sssd-nss.socket" "sssd-pac.socket" "sssd-pam.socket" "sssd-ssh.socket" "sssd-sudo.socket" "sssd.service" "sssd.socket" "sudo.service" "suspend-then-hibernate.target" "switcheroo-control.service" "systemd-backlight@.service" "systemd-binfmt.service" "systemd-coredump.socket" "systemd-factory-reset-complete.service" "systemd-factory-reset-reboot.service" "systemd-factory-reset-request.service" "systemd-firstboot.service" "systemd-hibernate-clear.service" "systemd-hibernate-resume.service" "systemd-homed-activate.service" "systemd-homed.service" "systemd-hostnamed.service" "systemd-hybrid-sleep.service" "systemd-journal-gatewayd.socket" "systemd-journal-remote.socket" "systemd-journal-upload.service" "systemd-kexec.service" "systemd-localed.service" "systemd-nspawn@.service" "systemd-pstore.service" "systemd-quotacheck-root.service" "systemd-quotacheck@.service" "systemd-rfkill.service" "systemd-rfkill.socket" "systemd-suspend-then-hibernate.service" "systemd-timedated.service" "systemd-userdbd.service" "systemd-userdbd.socket" "telnet.socket" "tigervnc.service" "tracker-extract-3.service" "tracker-miner-fs-3.service" "tracker-miner-rss-3.service" "tracker-writeback-3.service" "udisks2.service" "unattended-upgrades.service" "upower.service" "usb-gadget.target" "usbip.service" "usbipd.service" "usbmuxd.service" "usbmuxd.socket" "vboxadd-service.service" "vboxadd.service" "vboxautostart-service.service" "vboxballoonctrl-service.service" "vboxdrv.service" "vboxweb-service.service" "vino-server.service" "virtlockd.service" "virtlockd.socket" "virtlogd.service" "virtlogd.socket" "vmtoolsd.service" "vmware-tools.service" "vmware-vmblock-fuse.service" "vsftpd.service" "webmin.service" "whoopsie.service" "winbind.service" "wpa_supplicant.service" "x11vnc.service" "xinetd.service" "xrdp-sesman.service" "xrdp.service" "xrdp.socket"
 )
